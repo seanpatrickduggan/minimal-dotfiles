@@ -18,6 +18,7 @@ precmd() {
             vcs_info_msg_0_="${vcs_info_msg_0_//green/yellow}"
         fi
     fi
+    precmd_venv
 }
 setopt PROMPT_SUBST
 # Override these to hardcode your prompt identity:
@@ -25,7 +26,15 @@ setopt PROMPT_SUBST
 # host_display="myhost"
 user_display="${user_display:-%n}"
 host_display="${host_display:-%m}"
-PROMPT='${VIRTUAL_ENV:+(%F{green}${VIRTUAL_ENV:t}%f) }%F{blue}${user_display}@${host_display}%f:%F{cyan}%~%f${vcs_info_msg_0_} $ '
+PROMPT="%F{blue}${user_display}@${host_display}%f:%F{cyan}%~%f\${vcs_info_msg_0_} $ "
+# Prepend venv name if active
+precmd_venv() {
+    if [[ -n "$VIRTUAL_ENV" ]]; then
+        PROMPT="%F{green}(${VIRTUAL_ENV:t})%f %F{blue}${user_display}@${host_display}%f:%F{cyan}%~%f\${vcs_info_msg_0_} $ "
+    else
+        PROMPT="%F{blue}${user_display}@${host_display}%f:%F{cyan}%~%f\${vcs_info_msg_0_} $ "
+    fi
+}
 
 # -------------------------------------------------------------------
 # Options
