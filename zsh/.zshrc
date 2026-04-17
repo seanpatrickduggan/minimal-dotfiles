@@ -5,19 +5,10 @@
 # -------------------------------------------------------------------
 # Simple prompt: user@host:path (branch) $
 autoload -Uz vcs_info
-zstyle ':vcs_info:git:*' check-for-changes true
-zstyle ':vcs_info:git:*' stagedstr '+'
-zstyle ':vcs_info:git:*' unstagedstr '!'
-zstyle ':vcs_info:git:*' formats ' (%F{green}%b%c%u%f)'
-zstyle ':vcs_info:git:*' actionformats ' (%F{red}%b|%a%c%u%f)'
+zstyle ':vcs_info:git:*' formats ' (%b)'
+zstyle ':vcs_info:git:*' actionformats ' (%b|%a)'
 precmd() {
     vcs_info
-    # Recolor branch if dirty
-    if [[ -n "${vcs_info_msg_0_}" ]]; then
-        if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
-            vcs_info_msg_0_="${vcs_info_msg_0_//green/yellow}"
-        fi
-    fi
     precmd_venv
 }
 setopt PROMPT_SUBST
