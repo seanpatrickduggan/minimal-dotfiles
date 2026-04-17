@@ -5,10 +5,27 @@
 # -------------------------------------------------------------------
 # Simple prompt: user@host:path (branch) $
 autoload -Uz vcs_info
-precmd() { vcs_info }
-zstyle ':vcs_info:git:*' formats ' (%b)'
+zstyle ':vcs_info:git:*' check-for-changes true
+zstyle ':vcs_info:git:*' stagedstr '+'
+zstyle ':vcs_info:git:*' unstagedstr '!'
+zstyle ':vcs_info:git:*' formats ' (%F{green}%b%c%u%f)'
+zstyle ':vcs_info:git:*' actionformats ' (%F{red}%b|%a%c%u%f)'
+precmd() {
+    vcs_info
+    # Recolor branch if dirty
+    if [[ -n "${vcs_info_msg_0_}" ]]; then
+        if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
+            vcs_info_msg_0_="${vcs_info_msg_0_//green/yellow}"
+        fi
+    fi
+}
 setopt PROMPT_SUBST
-PROMPT='%F{blue}%n@%m%f:%F{cyan}%~%f%F{yellow}${vcs_info_msg_0_}%f $ '
+# Override these to hardcode your prompt identity:
+# user_display="sean"
+# host_display="myhost"
+user_display="${user_display:-%n}"
+host_display="${host_display:-%m}"
+PROMPT='${VIRTUAL_ENV:+(%F{green}${VIRTUAL_ENV:t}%f) }%F{blue}${user_display}@${host_display}%f:%F{cyan}%~%f${vcs_info_msg_0_} $ '
 
 # -------------------------------------------------------------------
 # Options
@@ -29,6 +46,14 @@ SAVEHIST=1000000
 
 # Emacs keybindings
 bindkey -e
+
+# Fix Ctrl+arrows (word navigation) and Delete key
+bindkey '^[[1;5C' forward-word       # Ctrl+Right
+bindkey '^[[1;5D' backward-word      # Ctrl+Left
+bindkey '^[[3~'   delete-char        # Delete
+bindkey '^[[H'    beginning-of-line  # Home
+bindkey '^[[F'    end-of-line        # End
+bindkey '^[[Z'    reverse-menu-complete  # Shift+Tab (cycle completions backward)
 
 # Completion system
 autoload -Uz compinit && compinit
@@ -53,6 +78,7 @@ bindkey "^[[B" down-line-or-beginning-search  # Down arrow
 [[ "$TERM" != *256color* ]] && export TERM="xterm-256color"
 
 export EDITOR="nvim"
+export VIRTUAL_ENV_DISABLE_PROMPT=1
 export PATH="$HOME/bin:$PATH"
 
 # Ripgrep shorthand (don't shadow grep — scripts depend on grep's output format)
