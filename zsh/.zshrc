@@ -68,8 +68,10 @@ zstyle ':completion:*' matcher-list 'm:{a-z}={A-Z}'  # case-insensitive matching
 autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
 zle -N up-line-or-beginning-search
 zle -N down-line-or-beginning-search
-bindkey "^[[A" up-line-or-beginning-search    # Up arrow
-bindkey "^[[B" down-line-or-beginning-search  # Down arrow
+bindkey "^[[A" up-line-or-beginning-search    # Up arrow (CSI)
+bindkey "^[[B" down-line-or-beginning-search  # Down arrow (CSI)
+bindkey "^[OA" up-line-or-beginning-search    # Up arrow (SS3, application mode)
+bindkey "^[OB" down-line-or-beginning-search  # Down arrow (SS3, application mode)
 
 # -------------------------------------------------------------------
 # Environment

@@ -13,7 +13,6 @@ vim.opt.softtabstop = 4
 vim.opt.shiftwidth = 4
 vim.opt.timeoutlen = 1000
 vim.opt.completeopt = { "menuone", "noselect" }
-vim.opt.termguicolors = true
 vim.opt.hlsearch = true
 vim.opt.number = true
 vim.opt.relativenumber = true
@@ -34,14 +33,38 @@ vim.opt.guicursor =
     "n-v-c:block-Cursor/lCursor,i:ver25-iCursor"
 
 -------------------------------------------------------------------------------
--- Colorscheme
+-- Colorscheme: leave at default so terminal palette shows through.
+-- Set $NVIM_COLORSCHEME to override (e.g. lunaperche, desert, slate).
 -------------------------------------------------------------------------------
--- "slate" and "desert" are safe on any neovim version.
--- "habamax" requires 0.9+, "lunaperche" requires 0.8+.
-local ok, _ = pcall(vim.cmd, "colorscheme lunaperche")
-if not ok then
-    vim.cmd("colorscheme desert")
+local cs = vim.env.NVIM_COLORSCHEME
+if cs and cs ~= "" then
+    pcall(vim.cmd, "colorscheme " .. cs)
 end
+
+-------------------------------------------------------------------------------
+-- OSC 52 clipboard (works over SSH on air-gapped boxes with no xclip/xsel).
+-- Requires a terminal that honors OSC 52 (iTerm2, WezTerm, kitty, Windows
+-- Terminal, recent xterm). For tmux, ensure `set -g set-clipboard on`.
+-------------------------------------------------------------------------------
+local function osc52_copy(lines, _)
+    local text = table.concat(lines, "\n")
+    local b64 = vim.fn.system({ "base64", "-w0" }, text)
+    b64 = b64:gsub("\n", "")
+    local seq
+    if vim.env.TMUX then
+        seq = string.format("\027Ptmux;\027\027]52;c;%s\007\027\\", b64)
+    else
+        seq = string.format("\027]52;c;%s\027\\", b64)
+    end
+    io.stdout:write(seq)
+    io.stdout:flush()
+end
+
+vim.g.clipboard = {
+    name = "osc52",
+    copy = { ["+"] = osc52_copy, ["*"] = osc52_copy },
+    paste = { ["+"] = function() return { "" } end, ["*"] = function() return { "" } end },
+}
 
 -------------------------------------------------------------------------------
 -- Keymaps
