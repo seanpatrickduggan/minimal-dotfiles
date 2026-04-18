@@ -4,27 +4,27 @@
 # Prompt
 # -------------------------------------------------------------------
 # Simple prompt: user@host:path (branch) $
-autoload -Uz vcs_info
-zstyle ':vcs_info:git:*' formats ' (%b)'
-zstyle ':vcs_info:git:*' actionformats ' (%b|%a)'
-precmd() {
-    vcs_info
-    precmd_venv
-}
 setopt PROMPT_SUBST
 # Override these to hardcode your prompt identity:
 # user_display="sean"
 # host_display="myhost"
 user_display="${user_display:-%n}"
 host_display="${host_display:-%m}"
-PROMPT="%F{blue}${user_display}@${host_display}%f:%F{cyan}%~%f\${vcs_info_msg_0_} $ "
-# Prepend venv name if active
-precmd_venv() {
-    if [[ -n "$VIRTUAL_ENV" ]]; then
-        PROMPT="%F{green}(${VIRTUAL_ENV:t})%f %F{blue}${user_display}@${host_display}%f:%F{cyan}%~%f\${vcs_info_msg_0_} $ "
-    else
-        PROMPT="%F{blue}${user_display}@${host_display}%f:%F{cyan}%~%f\${vcs_info_msg_0_} $ "
-    fi
+
+# Branch name via git plumbing (one fork, no status/dirty/action checks).
+# Falls back to short SHA when detached so we never show a misleading state.
+git_branch() {
+    local ref
+    ref=$(git symbolic-ref --short HEAD 2>/dev/null) \
+        || ref=$(git rev-parse --short HEAD 2>/dev/null) \
+        || return
+    print -n " (${ref})"
+}
+
+precmd() {
+    local venv=""
+    [[ -n "$VIRTUAL_ENV" ]] && venv="%F{green}(${VIRTUAL_ENV:t})%f "
+    PROMPT="${venv}%F{blue}${user_display}@${host_display}%f:%F{cyan}%~%f$(git_branch) $ "
 }
 
 # -------------------------------------------------------------------
