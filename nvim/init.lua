@@ -49,9 +49,14 @@ local function osc52_copy(lines, _)
     local text = table.concat(lines, "\n")
     local b64 = vim.fn.system({ "base64", "-w0" }, text)
     b64 = b64:gsub("\n", "")
-    -- Emit plain OSC 52; tmux (with set-clipboard on + Ms capability) will
-    -- forward to the outer terminal. Avoids DCS-passthrough double-handling.
-    local seq = string.format("\027]52;c;%s\027\\", b64)
+    -- With tmux set-clipboard=external, apps inside tmux must use DCS
+    -- passthrough to reach the outer terminal — tmux won't intercept.
+    local seq
+    if vim.env.TMUX then
+        seq = string.format("\027Ptmux;\027\027]52;c;%s\007\027\\", b64)
+    else
+        seq = string.format("\027]52;c;%s\027\\", b64)
+    end
     local tty, err = io.open("/dev/tty", "w")
     if tty then
         tty:write(seq)
