@@ -18,7 +18,6 @@ vim.opt.number = true
 vim.opt.relativenumber = true
 vim.opt.cursorline = false
 vim.opt.mouse = "a"
-vim.opt.clipboard = "unnamedplus"
 vim.opt.breakindent = true
 vim.opt.undofile = true
 vim.opt.ignorecase = true
@@ -56,8 +55,11 @@ local function osc52_copy(lines, _)
     else
         seq = string.format("\027]52;c;%s\027\\", b64)
     end
-    io.stdout:write(seq)
-    io.stdout:flush()
+    local tty, err = io.open("/dev/tty", "w")
+    if tty then
+        tty:write(seq)
+        tty:close()
+    end
 end
 
 vim.g.clipboard = {
@@ -65,6 +67,9 @@ vim.g.clipboard = {
     copy = { ["+"] = osc52_copy, ["*"] = osc52_copy },
     paste = { ["+"] = function() return { "" } end, ["*"] = function() return { "" } end },
 }
+
+vim.keymap.set({ "n", "v" }, "<leader>y", '"+y', { desc = "Yank to system clipboard (OSC 52)" })
+vim.keymap.set("n", "<leader>Y", '"+Y', { desc = "Yank line to system clipboard (OSC 52)" })
 
 -------------------------------------------------------------------------------
 -- Keymaps
