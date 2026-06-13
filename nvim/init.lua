@@ -83,6 +83,9 @@ vim.g.clipboard = {
     paste = { ["+"] = function() return { "" } end, ["*"] = function() return { "" } end },
 }
 
+vim.keymap.set({ "n", "v" }, "<leader>y", '"+y', { desc = "Yank to system clipboard (OSC 52)" })
+vim.keymap.set("n", "<leader>Y", '"+Y', { desc = "Yank line to system clipboard (OSC 52)" })
+
 -------------------------------------------------------------------------------
 -- Keymaps
 -------------------------------------------------------------------------------
