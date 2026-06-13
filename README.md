@@ -21,7 +21,29 @@ docker run -it -v $(pwd):/home/devuser/configs minimal-dotfiles
 ./deploy.sh
 ```
 
+## Windows Client Notes
+
+These dotfiles live on the remote Linux box. The client (Windows) setup is out of scope for this repo,
+but a few notes for Alacritty users:
+
+**Shell:** Alacritty defaults to PowerShell on Windows. For a pure SSH workflow (open terminal → ssh → done),
+the local shell doesn't matter — PowerShell is fine. Git Bash and MSYS2 won't improve copy/paste or
+any SSH-related experience; both run through a POSIX emulation layer that makes local commands noticeably
+slow. Only worth considering if you want Unix coreutils available locally and can accept that tradeoff.
+
+**Paste keybinding:** Alacritty's default paste shortcut is `Ctrl+Shift+V` (unlike Windows Terminal's `Ctrl+V`).
+To remap to `Ctrl+V` in `alacritty.toml`:
+```toml
+[keyboard]
+bindings = [
+  { key = "V", mods = "Control", action = "Paste" },
+]
+```
+
 ## Ideas / TODO
+
+- [ ] If remote nvim is 0.10+, replace the manual OSC 52 clipboard implementation in `nvim/init.lua`
+      with the built-in provider: `vim.g.clipboard = require("vim.clipboard.osc52")` (check with `nvim --version`)
 
 - [ ] `Ctrl+Z` toggle between shell and backgrounded nvim
 - [ ] `mkcd` function (mkdir + cd)

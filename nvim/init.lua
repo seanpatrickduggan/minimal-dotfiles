@@ -44,17 +44,34 @@ end
 -------------------------------------------------------------------------------
 -- OSC 52 clipboard (works over SSH on air-gapped boxes with no xclip/xsel).
 -- Requires a terminal that honors OSC 52 (iTerm2, WezTerm, kitty, Windows
--- Terminal, recent xterm). For tmux, ensure `set -g set-clipboard on`.
+-- Terminal, Alacritty, recent xterm). For tmux, ensure `set -g set-clipboard on`.
 -------------------------------------------------------------------------------
+local function b64encode(s)
+    local alpha = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    local out = {}
+    for i = 1, #s, 3 do
+        local a, b, c = s:byte(i, i + 2)
+        b, c = b or 0, c or 0
+        local n = a * 65536 + b * 256 + c
+        out[#out + 1] = alpha:sub(math.floor(n / 262144) + 1, math.floor(n / 262144) + 1)
+            .. alpha:sub(math.floor(n / 4096) % 64 + 1, math.floor(n / 4096) % 64 + 1)
+            .. alpha:sub(math.floor(n / 64) % 64 + 1, math.floor(n / 64) % 64 + 1)
+            .. alpha:sub(n % 64 + 1, n % 64 + 1)
+    end
+    local r = table.concat(out)
+    local pad = #s % 3
+    if pad == 1 then return r:sub(1, -3) .. "==" end
+    if pad == 2 then return r:sub(1, -2) .. "=" end
+    return r
+end
+
 local function osc52_copy(lines, _)
     local text = table.concat(lines, "\n")
-    local b64 = vim.fn.system({ "base64", "-w0" }, text)
-    b64 = b64:gsub("\n", "")
     local seq
     if vim.env.TMUX then
-        seq = string.format("\027Ptmux;\027\027]52;c;%s\007\027\\", b64)
+        seq = string.format("\027Ptmux;\027\027]52;c;%s\007\027\\", b64encode(text))
     else
-        seq = string.format("\027]52;c;%s\027\\", b64)
+        seq = string.format("\027]52;c;%s\027\\", b64encode(text))
     end
     io.stdout:write(seq)
     io.stdout:flush()
